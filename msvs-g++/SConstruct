@@ -1,0 +1,37 @@
+# vim:ft=python
+import os
+
+lib_sources = [
+    'lib.cpp',
+]
+
+exe_sources = [
+    'main.c'
+]
+
+#xxx hardcoded ugly
+if 0:
+    # mingw64 installed outside cygwin
+    #gcc_bin="C:/mingw-w64/i686-4.9.2-posix-dwarf-rt_v4-rev3/mingw32/bin"
+    gcc_bin="C:\\mingw-w64\\i686-4.9.2-posix-dwarf-rt_v4-rev2\\mingw32\\bin"
+    tools = ['gcc', 'g++', 'ar', 'gnulink']
+    #tools = ['mingw']
+if 1:
+    # cygwin's g++
+    gcc_bin = "c:/tools/cygwin/bin"
+    tools = ['gcc', 'g++', 'ar', 'gnulink']
+
+env = Environment(tools=tools, ENV = {'PATH' : gcc_bin},
+    CPPPATH='#'
+	)
+
+lib_objects = [
+    env.StaticObject(src) for src in lib_sources]
+
+static_lib = env.StaticLibrary('foo', lib_objects)
+
+env.Program('bar', exe_sources,
+    LIBS=[
+        static_lib,
+		'stdc++'
+    ])
