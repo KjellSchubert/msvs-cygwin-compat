@@ -19,7 +19,7 @@ I set up: to repro my attempts run these steps:
 * install cygwin, scons, msvs
 * cd msvs-gcc
 * run scons to have cygwin build lib.obj, foo.lib and bar.exe.
-* run bar.exe to verify cygwin generated a functional windows exe
+* run 'scons bar.exe' to verify cygwin generated a functional windows exe
 * open vcxproj in msvs, compile main.c with msvs, then link against the
   cywgin-generated foo.lib. I was surprised to see msvs can link both against
   lib.obj and also foo.lib, I had not expected that cygwin ar generates a
@@ -37,7 +37,35 @@ here, since obviously you cannit mix & match 32/64 bit objs in the same process
 no matter what toolchain generated them (you get errors like 'LNK1112: module machine type 'x64' conflicts with target machine type 'X86' from 32/64bit
 mismatches).
 
-msvs linking against static gygwin-generated C++ libs
+msvs linking against shared/dynamic cygwin-generated C libs
+---
+
+* cd msvs-gcc
+* 'scons bar_shared.exe' to have cygwin build bar_shared.dll and bar_shared.exe
+
+But how can we link against foo_shared.dll in msvs? Note that cygwin only
+generates a foo_shared.dll, but no accompanying import library (which msvs
+needs for linking). See https://cygwin.com/faq/faq.html#TOC102 : so we
+have to generate a .def file from the dll, then an msvs import lib from the
+.def, and then also mess with cygwin_crt0() if cygwin1.dll was being used.
+See also http://stackoverflow.com/questions/9946322/how-to-generate-an-import-library-lib-file-from-a-dll:
+
+>bash foo_shared_import.sh
+
+Then build bar_shared.vcxproj with msvs 2012 (make sure you pick the correct
+win32 or x64 target), then run debug\bar_shared.exe to verify this executes
+fine, then run 'depends debug\bar_shared.exe' to verify which DLLs the exe
+depends on (and that mingw DLL build depends on msvcrt.dll, whereas cygwin
+DLL build depends on cygwin1.dll).
+
+Other useful tools:
+
+>dumpbin /symbols
+>dumpbin /exports
+>dumpbin /headers  # shows x64 vs x86 machine format
+>depends.exe  # shows DLL deps
+
+msvs linking against static cygwin-generated C++ libs
 ---
 
 This is what actually would be highly valuable, since there are plenty of
@@ -48,7 +76,7 @@ didn't work in the small test I ran: this is a variant of the (successful)
 C-level link test:
 
 * cd msvs-c++
-* run scons to have cygwin build lib.o, foo.lib and bar.exe.
+* run 'scons bar.exe' to have cygwin build lib.o, foo.lib and bar.exe.
 * run bar.exe to verify cygwin generated a functional windows exe
 * open vcxproj in msvs, compile main.c with msvs, then link against the
   cywgin-generated foo.lib. An extra complication to the C sample is that

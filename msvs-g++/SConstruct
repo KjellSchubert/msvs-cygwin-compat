@@ -25,13 +25,18 @@ env = Environment(tools=tools, ENV = {'PATH' : gcc_bin},
     CPPPATH='#'
 	)
 
-lib_objects = [
-    env.StaticObject(src) for src in lib_sources]
-
-static_lib = env.StaticLibrary('foo', lib_objects)
+foo_lib = env.StaticLibrary('foo', lib_sources)
 
 env.Program('bar', exe_sources,
     LIBS=[
-        static_lib,
+        foo_lib,
+		'stdc++'
+    ])
+
+foo_dll = env.SharedLibrary('foo_shared', lib_sources)
+
+env.Program('bar_shared', exe_sources,
+    LIBS=[
+        foo_dll,
 		'stdc++'
     ])
